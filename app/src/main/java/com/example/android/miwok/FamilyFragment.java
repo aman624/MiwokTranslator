@@ -1,13 +1,9 @@
 package com.example.android.miwok;
 
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.widget.ListView;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class FamilyActivity extends BaseActivity {
+public class FamilyFragment extends BaseFragment {
 
     @Override
     protected List<Word> getWordList() {

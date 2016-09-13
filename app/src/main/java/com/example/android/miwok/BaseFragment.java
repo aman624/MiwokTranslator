@@ -1,19 +1,20 @@
 package com.example.android.miwok;
 
+import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.support.v4.app.NavUtils;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseActivity extends AppCompatActivity implements AudioManager.OnAudioFocusChangeListener {
+public abstract class BaseFragment extends Fragment implements AudioManager.OnAudioFocusChangeListener {
     private MediaPlayer mMediaPlayer;
     private MediaPlayer.OnCompletionListener mOnCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
@@ -23,52 +24,41 @@ public abstract class BaseActivity extends AppCompatActivity implements AudioMan
     };
     private AudioManager mAudioManager;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.word_list);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.word_list, container, false);
         final List<Word> words = getWordList();
+        final Context context = getContext();
 
-        WordAdapter itemsAdapter = new WordAdapter(this, R.layout.list_item, words,
+        WordAdapter itemsAdapter = new WordAdapter(context, R.layout.list_item, words,
                 getActivityColor());
-        ListView listView = (ListView) findViewById(R.id.list);
+        ListView listView = (ListView) view.findViewById(R.id.list);
         listView.setAdapter(itemsAdapter);
 
-        mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 Word word = words.get(position);
                 releaseMediaPlayer();
-                int result = mAudioManager.requestAudioFocus(BaseActivity.this, AudioManager.STREAM_MUSIC,
+                int result = mAudioManager.requestAudioFocus(BaseFragment.this, AudioManager.STREAM_MUSIC,
                         AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                    mMediaPlayer = MediaPlayer.create(BaseActivity.this, word.getAudioResourseId());
+                    mMediaPlayer = MediaPlayer.create(context, word.getAudioResourseId());
                     mMediaPlayer.start();
                     mMediaPlayer.setOnCompletionListener(mOnCompletionListener);
                 }
             }
         });
+        return view;
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         super.onStop();
         releaseMediaPlayer();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            // Respond to the action bar's Up/Home button
-            case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
